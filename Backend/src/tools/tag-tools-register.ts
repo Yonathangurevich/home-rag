@@ -12,7 +12,7 @@ class TagToolsRegister {
             "(e.g. code-template, prompt). Call this before save_entry or search_entries to pick " +
             "existing tags, instead of inventing new ones. Returns [{ id, name }], sorted by name."
         }
-        const tags = () => toolLogger.run(() => tagService.getAllTags());
+        const tags = () => toolLogger.run(name ,() => tagService.getAllTags());
         server.registerTool(name, config, tags);
     }
 
@@ -26,7 +26,7 @@ class TagToolsRegister {
     
             inputSchema: z.object({ name: z.string().describe("Tag name, e.g. 'code-template' or 'prompt'") })
         }
-        const addTag = (args: { name: string }) => toolLogger.run(() => tagService.addTag(args.name));
+        const addTag = (args: { name: string }) => toolLogger.run(name, () => tagService.addTag(args.name));
         server.registerTool(name, config, addTag);
     }
 

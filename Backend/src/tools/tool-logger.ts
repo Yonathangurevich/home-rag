@@ -13,6 +13,8 @@ class ToolLogger {
             // run the function: 
             const results = await fn();
 
+            this.log(toolName, "ok", start);
+
             // return the results:
             return { content: [{ type: "text", text: `${JSON.stringify(results)}`}]}
         }
@@ -20,6 +22,9 @@ class ToolLogger {
             
             // if the error part of client error enum: 
             if (err instanceof ClientError) {
+                
+                this.log(toolName, "client_error", start);
+                
                 return {
                     content: [{ type: "text", text: `Error: ${err.message}` }],
                     isError: true
@@ -28,13 +33,13 @@ class ToolLogger {
 
             // every other error:
             console.error(err);
+            
+            this.log(toolName, "internal_error", start);
+            
             return {
                 content: [{ type: "text", text: "Error: 'Internal error'" }],
                 isError: true
             };
-        }
-        finally {
-            this.log(toolName,)
         }
     }
 
