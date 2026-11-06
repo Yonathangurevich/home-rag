@@ -85,5 +85,40 @@ test("getAllTags returns tags sorted by name", () => {
     service.addTag("alpha");
 
     assert.deepEqual(service.getAllTags().map(t => t.name), ["alpha", "zeta"]);
-})
+});
+
+test("resolveTags should return same tags as sended", () => {
+    const service = new TagService(new Dal(":memory:"));
+    service.addTag("Code Template");
+    service.addTag("prompt");
+    const tags = service.resolveTags(["Code Template", "prompt"]);
+    assert.deepEqual(tags.map(t => t.name), ["code-template", "prompt"]);
+});
+
+test("resolveTags remove duplicates", () => {
+    const service = new TagService(new Dal(":memory:"));
+    service.addTag("prompt");
+    const tags = service.resolveTags(["prompt", "Prompt", " prompt "]);
+    assert.deepEqual(tags.map(t => t.name), ["prompt"]);
+});
+
+test("resolveTags throws client error on empty tags", () => {
+    const service = new TagService(new Dal(":memory:"));
+    assert.throws(() => service.resolveTags([]), ClientError);
+});
+
+test("resolveTags throws for unknown names", () => {
+    const service = new TagService(new Dal(":memory:"));
+    service.addTag("prompt");
+    const tags = () => service.resolveTags(["prompt", "nope", "also-nope"]);
+    assert.throws(tags,
+        (err: any) => err instanceof ClientError 
+            && err.message.includes("Unknown tags: nope, also-nope.")
+    );
+});
+
+test("resolveTags throws client error on invalid name", () => {
+    const service = new TagService(new Dal(":memory:"));
+    assert.throws(() => service.resolveTags(["bad!"]), ClientError);
+});
 

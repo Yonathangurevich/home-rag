@@ -46,6 +46,42 @@ export class TagService {
         return this.dal.executeGet("select id, name from tags where name = ?", [tag]);
     }
 
+    public resolveTags(names: string[]): TagModel[] {
+        
+        if (names.length === 0) {
+            throw new ClientError(StatusCode.UnprocessableContent, "At least one tag is required. Use list_tags to see existing tags.");
+        }
+
+        let normalizedTags = new Set<string>();
+
+        // validate names and add to normalizedTags set:
+        for (const name of names) {
+            normalizedTags.add(this.normalizeTag(name));
+        }
+
+        // turn the set to array:
+        const values: string[] = Array.from(normalizedTags);
+
+        // each name turns into '?' and join all names:
+        const placeholders = values.map(() => "?").join(", ");
+
+        // sql query:
+        const sql = `select id, name from tags where name in (${placeholders}) order by name`;
+        const tags = this.dal.executeAll(sql, values) as TagModel[];
+
+        // find unknown names:
+        const foundNames = tags.map(t => t.name);
+        const unknown = values.filter(name => !foundNames.includes(name));
+
+        // if any unknown names exists throw:
+        if (unknown.length > 0) {
+            throw new ClientError(StatusCode.UnprocessableContent, `Unknown tags: ${unknown.join(", ")}. Use list_tags to see existing tags, or add_tag to create a new one.`)
+        }
+
+        // return tags from dal:
+        return tags;
+    }
+
 }
 
 export const tagService = new TagService(dal);
